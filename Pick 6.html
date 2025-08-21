@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Pick 6</title>
+  <style>
+    body { font-family: 'Malgun Gothic', sans-serif; margin:20px; }
+    button { padding:8px 50px; font-size:14px; vertical-align:top; }
+    #out { margin-bottom:20px; font-size:50px; word-break:break-word; }
+    label { font-size:14px; margin-left:4px; }
+    .controls { white-space: nowrap; }
+    .button-wrapper, .checkbox-wrapper {
+      display:inline-block;
+      vertical-align:top;
+    }
+    .checkbox-wrapper div { margin-bottom:4px; }
+  </style>
+</head>
+<body>
+  <div id="out"></div>
+  <div class="controls">
+    <div class="button-wrapper">
+      <button id="rollBtn">Roll</button>
+    </div>
+    <div class="checkbox-wrapper">
+      <div>
+        <input type="checkbox" id="chkDup">
+        <label for="chkDup">No Duplicates</label>
+      </div>
+      <div>
+        <input type="checkbox" id="chkScale">
+        <label for="chkScale">#, ♭</label>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const pool = ["A","B","C","D","E","F","G"];
+      const poolAlt = ["C","C#","D♭","D","D#","E♭","E","F","F#","G♭","G","G#","A♭","A","A#","B♭","B"];
+
+      function pick() {
+        const chkDup = document.getElementById("chkDup").checked;
+        const chkScale = document.getElementById("chkScale").checked;
+
+        const curPool = chkScale ? [...poolAlt] : [...pool];
+        const poolSize = curPool.length;
+
+        let result = [];
+
+        if (chkDup) {
+          // 중복 불허
+          let arr = [...curPool];
+          for (let i = 0; i < 6; i++) {
+            const idx = Math.floor(Math.random() * (poolSize - i));
+            result.push(arr[idx]);
+            arr[idx] = arr[poolSize - 1 - i];
+          }
+        } else {
+          // 중복 허용
+          for (let i = 0; i < 6; i++) {
+            const idx = Math.floor(Math.random() * poolSize);
+            result.push(curPool[idx]);
+          }
+        }
+
+        document.getElementById("out").innerText = result.join(' ');
+      }
+
+      // 버튼 클릭 이벤트
+      document.getElementById("rollBtn").addEventListener("click", pick);
+
+      // 초기 실행
+      pick();
+    });
+  </script>
+</body>
+</html>
