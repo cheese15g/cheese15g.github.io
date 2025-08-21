@@ -1,145 +1,149 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Pick 6</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: 'Malgun Gothic', sans-serif;
-      background-color: #f5f5f5;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Pick 6</title>
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Malgun Gothic', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f5f5f5;
+}
 
-    #rotate-container {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
+/* 기본 컨테이너 */
+#rotate-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
 
-    #out {
-      flex: 2; /* 화면의 약 2/3 차지 */
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 10vw; /* 가로 폭 기준 글자 최대화 */
-      text-align: center;
-      width: 100%;
-      word-break: break-word;
-    }
+#out {
+  flex: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 50px; /* 데스크탑 기본 */
+  text-align: center;
+  width: 100%;
+  word-break: break-word;
+}
 
-    .controls {
-      flex: 1; /* 남은 공간 활용 */
-      display: flex;
-      width: 100%;
-      justify-content: center;
-      align-items: center;
-    }
+.controls {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
 
-    #rollBtn {
-      height: 100%; /* 세로 크기 유지 */
-      font-size: 6vw; /* 글자 크기 가로 기준 최대화 */
-      flex-grow: 1; /* 가로 여백 남으면 늘어나도록 */
-    }
+#rollBtn {
+  height: 50px; /* 세로 높이 고정 */
+  flex-grow: 1; /* 가로 최대 확장 */
+  font-size: 24px; /* 데스크탑 기본 */
+}
 
-    .checkbox-wrapper {
-      display: flex;
-      flex-direction: column;
-      margin-left: 2vw;
-      justify-content: center;
-    }
+.checkbox-wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-left: 10px;
+  justify-content: center;
+}
 
-    .checkbox-wrapper div {
-      margin-bottom: 2vh;
-    }
+.checkbox-wrapper div {
+  margin-bottom: 5px;
+}
 
-    label {
-      font-size: 4vw;
-      margin-left: 1vw;
-    }
+label {
+  font-size: 16px;
+  margin-left: 4px;
+}
 
-    /* 모바일 화면(가로폭 768px 이하)에서만 90도 회전 */
-    @media screen and (max-width: 768px) {
-      #rotate-container {
-        width: 100vh;
-        height: 100vw;
-        transform: rotate(90deg);
-        transform-origin: center center;
-      }
+/* 모바일 전용: 폭 768px 이하 */
+@media screen and (max-width: 768px) {
+  #rotate-container {
+    width: 100vh;
+    height: 100vw;
+    transform: rotate(90deg);
+    transform-origin: center center;
+  }
 
-      #out {
-        font-size: 12vw; /* 회전 상태에서도 글자 최대화 */
-      }
+  #out {
+    font-size: 20vw; /* 세로 기준 최대 */
+  }
 
-      #rollBtn {
-        font-size: 7vw; /* 회전 상태에서 버튼 글자 최대화 */
-      }
-    }
-  </style>
+  #rollBtn {
+    font-size: 5vw; /* 글자 최대화, 세로는 그대로 */
+    height: 50px;    /* 세로 고정 */
+  }
+
+  label {
+    font-size: 4vw;
+  }
+}
+</style>
 </head>
 <body>
-  <div id="rotate-container">
-    <div id="out"></div>
-    <div class="controls">
-      <button id="rollBtn">Roll</button>
-      <div class="checkbox-wrapper">
-        <div>
-          <input type="checkbox" id="chkDup">
-          <label for="chkDup">No Duplicates</label>
-        </div>
-        <div>
-          <input type="checkbox" id="chkScale">
-          <label for="chkScale">#, ♭</label>
-        </div>
+<div id="rotate-container">
+  <div id="out"></div>
+  <div class="controls">
+    <button id="rollBtn">Roll</button>
+    <div class="checkbox-wrapper">
+      <div>
+        <input type="checkbox" id="chkDup">
+        <label for="chkDup">No Duplicates</label>
+      </div>
+      <div>
+        <input type="checkbox" id="chkScale">
+        <label for="chkScale">#, ♭</label>
       </div>
     </div>
   </div>
+</div>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      const pool = ["A","B","C","D","E","F","G"];
-      const poolAlt = ["C","C#","D♭","D","D#","E♭","E","F","F#","G♭","G","G#","A♭","A","A#","B♭","B"];
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const pool = ["A","B","C","D","E","F","G"];
+  const poolAlt = ["C","C#","D♭","D","D#","E♭","E","F","F#","G♭","G","G#","A♭","A","A#","B♭","B"];
 
-      function pick() {
-        const chkDup = document.getElementById("chkDup").checked;
-        const chkScale = document.getElementById("chkScale").checked;
+  function pick() {
+    const chkDup = document.getElementById("chkDup").checked;
+    const chkScale = document.getElementById("chkScale").checked;
 
-        const curPool = chkScale ? [...poolAlt] : [...pool];
-        const poolSize = curPool.length;
+    const curPool = chkScale ? [...poolAlt] : [...pool];
+    const poolSize = curPool.length;
 
-        let result = [];
+    let result = [];
 
-        if (chkDup) {
-          let arr = [...curPool];
-          for (let i = 0; i < 6; i++) {
-            const idx = Math.floor(Math.random() * (poolSize - i));
-            result.push(arr[idx]);
-            arr[idx] = arr[poolSize - 1 - i];
-          }
-        } else {
-          for (let i = 0; i < 6; i++) {
-            const idx = Math.floor(Math.random() * poolSize);
-            result.push(curPool[idx]);
-          }
-        }
-
-        document.getElementById("out").innerText = result.join(' ');
+    if (chkDup) {
+      let arr = [...curPool];
+      for (let i = 0; i < 6; i++) {
+        const idx = Math.floor(Math.random() * (poolSize - i));
+        result.push(arr[idx]);
+        arr[idx] = arr[poolSize - 1 - i];
       }
+    } else {
+      for (let i = 0; i < 6; i++) {
+        const idx = Math.floor(Math.random() * poolSize);
+        result.push(curPool[idx]);
+      }
+    }
 
-      document.getElementById("rollBtn").addEventListener("click", pick);
+    document.getElementById("out").innerText = result.join(' ');
+  }
 
-      pick(); // 초기 실행
-    });
-  </script>
+  document.getElementById("rollBtn").addEventListener("click", pick);
+  pick();
+});
+</script>
 </body>
 </html>
