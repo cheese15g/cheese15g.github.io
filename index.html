@@ -119,6 +119,7 @@ document.addEventListener("DOMContentLoaded", function() {
   const poolAlt = ["C","C#","D♭","D","D#","E♭","E","F","F#","G♭","G","G#","A♭","A","A#","B♭","B"];
   const outEl = document.getElementById("out");
 
+  // 결과 출력
   function pick() {
     const chkDup = document.getElementById("chkDup").checked;
     const chkScale = document.getElementById("chkScale").checked;
@@ -140,19 +141,20 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     outEl.innerText = result.join(' ');
-    adjustFontSize();
   }
 
-  // 화면 폭 기준 글자 크기 최대화, 결과값 길이에 관계없이
-  function adjustFontSize() {
+  // 화면 폭 기준 글자 크기 한 번만 설정
+  function setFontSize() {
     const parentWidth = outEl.parentElement.offsetWidth;
     const maxFontSize = parentWidth * 0.18; // 폭 기준 최대
     outEl.style.fontSize = maxFontSize + 'px';
   }
 
   document.getElementById("rollBtn").addEventListener("click", pick);
-  window.addEventListener("resize", adjustFontSize);
-  pick();
+  window.addEventListener("resize", setFontSize);
+
+  setFontSize(); // 초기 글자 크기 설정
+  pick();        // 초기 결과
 });
 </script>
 </body>
