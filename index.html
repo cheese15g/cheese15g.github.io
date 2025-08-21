@@ -18,6 +18,7 @@ html, body {
   background-color: #f5f5f5;
 }
 
+/* 기본 컨테이너 */
 #rotate-container {
   width: 100%;
   height: 100%;
@@ -32,23 +33,24 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 50px;
+  font-size: 50px; /* 데스크탑 기본 */
   text-align: center;
   width: 100%;
   white-space: nowrap; /* 한 줄 유지 */
 }
 
 .controls {
-  flex: 1;
   display: flex;
   align-items: center;
   width: 100%;
+  height: 60px; /* 버튼 세로 기준 고정 */
 }
 
 #rollBtn {
-  height: 50px;
-  flex-grow: 1; /* 가로 최대화 */
-  font-size: 24px;
+  height: 50px;      /* 세로 고정 */
+  flex-grow: 1;      /* 가로 최대 확장 */
+  font-size: 5vw;    /* 글자 크기 화면 폭 기준 */
+  max-width: 100%;   /* 가로 최대치 제한 */
 }
 
 .checkbox-wrapper {
@@ -67,7 +69,7 @@ label {
   margin-left: 4px;
 }
 
-/* 모바일 전용 */
+/* 모바일 전용: 폭 768px 이하 */
 @media screen and (max-width: 768px) {
   #rotate-container {
     width: 100vh;
@@ -76,12 +78,16 @@ label {
     transform-origin: center center;
   }
 
-  #rollBtn {
-    font-size: 5vw;
-    height: 50px;
+  #out {
+    font-size: 20vw; /* 세로 기준 최대 */
   }
 
-  .checkbox-wrapper label {
+  #rollBtn {
+    font-size: 5vw; /* 글자 최대화, 세로는 그대로 */
+    height: 50px;    /* 세로 고정 */
+  }
+
+  label {
     font-size: 4vw;
   }
 }
@@ -109,7 +115,6 @@ label {
 document.addEventListener("DOMContentLoaded", function() {
   const pool = ["A","B","C","D","E","F","G"];
   const poolAlt = ["C","C#","D♭","D","D#","E♭","E","F","F#","G♭","G","G#","A♭","A","A#","B♭","B"];
-
   const outEl = document.getElementById("out");
 
   function pick() {
@@ -136,14 +141,13 @@ document.addEventListener("DOMContentLoaded", function() {
     adjustFontSize();
   }
 
-  // 글자 크기 화면에 맞게 자동 조정
+  // 화면에 맞춰 글자 크기 최대화
   function adjustFontSize() {
-    let parentWidth = outEl.parentElement.offsetWidth;
-    let parentHeight = outEl.parentElement.offsetHeight;
-    let fontSize = parentHeight * 0.2; // 초기 세로 기준
+    const parentWidth = outEl.parentElement.offsetWidth;
+    const parentHeight = outEl.parentElement.offsetHeight;
+    let fontSize = parentHeight * 0.2;
     outEl.style.fontSize = fontSize + 'px';
 
-    // 글자가 화면보다 길면 가로 기준으로 줄이기
     while (outEl.scrollWidth > parentWidth && fontSize > 10) {
       fontSize -= 1;
       outEl.style.fontSize = fontSize + 'px';
