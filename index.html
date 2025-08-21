@@ -10,12 +10,21 @@
       padding: 0;
       height: 100%;
       width: 100%;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #f5f5f5;
+      font-family: 'Malgun Gothic', sans-serif;
+    }
+
+    #rotate-container {
+      width: 100%;
+      height: 100%;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      font-family: 'Malgun Gothic', sans-serif;
-      background-color: #f5f5f5;
     }
 
     #out {
@@ -23,7 +32,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 10vw; /* 화면 가로 기준으로 크게 */
+      font-size: 10vw;
       text-align: center;
       width: 100%;
       word-break: break-word;
@@ -37,7 +46,7 @@
 
     button {
       padding: 12px 40px;
-      font-size: 6vw; /* 버튼 크기도 화면 비율로 */
+      font-size: 6vw;
       min-width: 120px;
       min-height: 50px;
     }
@@ -56,20 +65,32 @@
       font-size: 4vw;
       margin-left: 2vw;
     }
+
+    /* 모바일 화면(가로폭 768px 이하)에서만 90도 회전 */
+    @media screen and (max-width: 768px) {
+      #rotate-container {
+        width: 100vh;
+        height: 100vw;
+        transform: rotate(90deg);
+        transform-origin: center center;
+      }
+    }
   </style>
 </head>
 <body>
-  <div id="out"></div>
-  <div class="controls">
-    <button id="rollBtn">Roll</button>
-    <div class="checkbox-wrapper">
-      <div>
-        <input type="checkbox" id="chkDup">
-        <label for="chkDup">No Duplicates</label>
-      </div>
-      <div>
-        <input type="checkbox" id="chkScale">
-        <label for="chkScale">#, ♭</label>
+  <div id="rotate-container">
+    <div id="out"></div>
+    <div class="controls">
+      <button id="rollBtn">Roll</button>
+      <div class="checkbox-wrapper">
+        <div>
+          <input type="checkbox" id="chkDup">
+          <label for="chkDup">No Duplicates</label>
+        </div>
+        <div>
+          <input type="checkbox" id="chkScale">
+          <label for="chkScale">#, ♭</label>
+        </div>
       </div>
     </div>
   </div>
