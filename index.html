@@ -28,18 +28,18 @@
     }
 
     #out {
-      flex: 2; /* 화면의 2/3 정도 차지 */
+      flex: 2; /* 화면의 약 2/3 차지 */
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 12vw;
+      font-size: 10vw; /* 가로 폭 기준 글자 최대화 */
       text-align: center;
       width: 100%;
       word-break: break-word;
     }
 
     .controls {
-      flex: 1; /* 남은 공간 가득 채움 */
+      flex: 1; /* 남은 공간 활용 */
       display: flex;
       width: 100%;
       justify-content: center;
@@ -47,9 +47,9 @@
     }
 
     #rollBtn {
-      flex: 1; /* 버튼이 남은 공간 가득 채움 */
-      height: 100%;
-      font-size: 6vw;
+      height: 100%; /* 세로 크기 유지 */
+      font-size: 6vw; /* 글자 크기 가로 기준 최대화 */
+      flex-grow: 1; /* 가로 여백 남으면 늘어나도록 */
     }
 
     .checkbox-wrapper {
@@ -75,6 +75,14 @@
         height: 100vw;
         transform: rotate(90deg);
         transform-origin: center center;
+      }
+
+      #out {
+        font-size: 12vw; /* 회전 상태에서도 글자 최대화 */
+      }
+
+      #rollBtn {
+        font-size: 7vw; /* 회전 상태에서 버튼 글자 최대화 */
       }
     }
   </style>
