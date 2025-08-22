@@ -28,15 +28,13 @@ html, body {
 }
 
 #out {
-  flex: 2;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: clamp(32px, 10vw, 160px);
+  font-size: clamp(32px, 8vw, 120px); /* 항상 최소 32px 이상 */
   text-align: center;
   width: 100%;
   white-space: nowrap;
-  overflow: hidden;
 }
 
 #timer {
@@ -56,8 +54,7 @@ html, body {
 #rollBtn {
   height: 50px;
   flex-grow: 1;
-  /* clamp(최소, 기준, 최대) → 큰 화면에서 글자가 너무 커지지 않게 */
-  font-size: clamp(16px, 4vw, 32px);
+  font-size: clamp(16px, 4vw, 28px); /* 버튼 글자 크기 제한 */
   max-width: 100%;
 }
 
@@ -83,9 +80,9 @@ label {
     transform-origin: center center;
   }
   #out {
-    font-size: clamp(28px, 18vw, 200px);
+    font-size: clamp(28px, 16vw, 180px);
   }
-  #rollBtn { font-size: clamp(16px, 5vw, 28px); height: 50px; }
+  #rollBtn { font-size: clamp(14px, 5vw, 24px); height: 50px; }
   label { font-size: 4vw; }
 }
 </style>
@@ -122,4 +119,40 @@ document.addEventListener("DOMContentLoaded", function() {
 
   function pick() {
     const now = performance.now();
-    i
+    if (lastClickTime !== null) {
+      const diff = (now - lastClickTime) / 1000;
+      timerEl.textContent = "Interval: " + diff.toFixed(2) + "s";
+    }
+    lastClickTime = now;
+
+    const chkDup = document.getElementById("chkDup").checked;
+    const chkScale = document.getElementById("chkScale").checked;
+    const curPool = chkScale ? poolAlt.slice() : pool.slice();
+    const poolSize = curPool.length;
+
+    const result = [];
+    if (chkDup) {
+      const arr = curPool.slice();
+      for (let i = 0; i < 6; i++) {
+        const idx = Math.floor(Math.random() * (poolSize - i));
+        result.push(arr[idx]);
+        arr[idx] = arr[poolSize - 1 - i];
+      }
+    } else {
+      for (let i = 0; i < 6; i++) {
+        result.push(curPool[Math.floor(Math.random() * poolSize)]);
+      }
+    }
+
+    outEl.textContent = result.join(' ');
+  }
+
+  document.getElementById("rollBtn").addEventListener("click", pick);
+
+  // 시작값
+  outEl.textContent = "E A D G B E";
+  timerEl.textContent = "Interval:";
+});
+</script>
+</body>
+</html>
