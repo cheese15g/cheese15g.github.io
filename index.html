@@ -1,113 +1,166 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>기타 지판 훈련</title>
-  <style>
-    body { font-family: sans-serif; text-align: center; padding: 20px; }
-    #note { font-size: 2em; margin: 20px 0; }
-    #result { font-size: 2em; margin: 20px 0; padding: 10px; border-radius: 10px; display: inline-block; }
-    button { padding: 10px 20px; font-size: 1.2em; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Pick 6</title>
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Malgun Gothic', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f5f5f5;
+}
+
+#rotate-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#out {
+  flex: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: clamp(32px, 10vw, 160px);
+  font-size: clamp(32px, 8vw, 120px); /* 항상 최소 32px 이상 */
+  text-align: center;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+#timer {
+  font-size: 20px;
+  margin-top: 5px;
+  text-align: center;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 60px;
+  min-height: 60px;
+}
+
+#rollBtn {
+  height: 50px;
+  flex-grow: 1;
+  /* clamp(최소, 기준, 최대) → 큰 화면에서 글자가 너무 커지지 않게 */
+  font-size: clamp(16px, 4vw, 32px);
+  font-size: clamp(16px, 4vw, 28px); /* 버튼 글자 크기 제한 */
+  max-width: 100%;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-left: 10px;
+  justify-content: center;
+}
+
+.checkbox-wrapper div { margin-bottom: 5px; }
+
+label {
+  font-size: 16px;
+  margin-left: 4px;
+}
+
+@media screen and (max-width: 768px) {
+  #rotate-container {
+    width: 100vh;
+    height: 100vw;
+    transform: rotate(90deg);
+    transform-origin: center center;
+  }
+  #out {
+    font-size: clamp(28px, 18vw, 200px);
+    font-size: clamp(28px, 16vw, 180px);
+  }
+  #rollBtn { font-size: clamp(16px, 5vw, 28px); height: 50px; }
+  #rollBtn { font-size: clamp(14px, 5vw, 24px); height: 50px; }
+  label { font-size: 4vw; }
+}
+</style>
 </head>
 <body>
-  <h2>기타 지판 암기 훈련</h2>
-  <button onclick="generateNote()">문제 생성</button>
-  <div id="note">-</div>
-  <div id="yourNote">🎵 당신의 음: -</div>
-  <div id="result">결과 대기중</div>
+<div id="rotate-container">
+  <div>
+    <div id="out"></div>
+    <div id="timer"></div>
+  </div>
+  <div class="controls">
+    <button id="rollBtn">Roll</button>
+    <div class="checkbox-wrapper">
+      <div>
+        <input type="checkbox" id="chkDup">
+        <label for="chkDup">No Duplicates</label>
+      </div>
+      <div>
+        <input type="checkbox" id="chkScale">
+        <label for="chkScale">#, ♭</label>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
-const notes = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
-let targetNote = null;
-let audioCtx, analyser, buffer, micStream;
+document.addEventListener("DOMContentLoaded", function() {
+  const pool = ["A","B","C","D","E","F","G"];
+  const poolAlt = ["C","C#","D♭","D","D#","E♭","E","F","F#","G♭","G","G#","A♭","A","A#","B♭","B"];
 
-function generateNote() {
-  const stringNum = Math.floor(Math.random() * 6) + 1; // 1~6번 줄
-  targetNote = notes[Math.floor(Math.random()*notes.length)];
-  document.getElementById("note").textContent = `🎸 ${stringNum}번 줄 → ${targetNote}`;
-  document.getElementById("result").textContent = "결과 대기중";
-  document.getElementById("result").style.backgroundColor = "transparent";
-}
+  const outEl = document.getElementById("out");
+  const timerEl = document.getElementById("timer");
+  let lastClickTime = null;
 
-// 주파수를 가장 가까운 음계로 변환
-function freqToNoteName(freq) {
-  if (!freq || freq <= 0) return null;
-  const A4 = 440;
-  const n = Math.round(12 * Math.log2(freq / A4));
-  const noteIndex = (n + 9) % 12; // A=0 → C=0으로 보정
-  return notes[(noteIndex + 12) % 12];
-}
+  function pick() {
+    const now = performance.now();
+    i
+    if (lastClickTime !== null) {
+      const diff = (now - lastClickTime) / 1000;
+      timerEl.textContent = "Interval: " + diff.toFixed(2) + "s";
+    }
+    lastClickTime = now;
 
-// 마이크 초기화
-async function initMic() {
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  const source = audioCtx.createMediaStreamSource(micStream);
-  analyser = audioCtx.createAnalyser();
-  analyser.fftSize = 2048;
-  buffer = new Float32Array(analyser.fftSize);
-  source.connect(analyser);
-  listenPitch();
-}
+    const chkDup = document.getElementById("chkDup").checked;
+    const chkScale = document.getElementById("chkScale").checked;
+    const curPool = chkScale ? poolAlt.slice() : pool.slice();
+    const poolSize = curPool.length;
 
-// 피치 추정
-function listenPitch() {
-  analyser.getFloatTimeDomainData(buffer);
-  const freq = autoCorrelate(buffer, audioCtx.sampleRate);
-  const noteName = freqToNoteName(freq);
-  if (noteName) {
-    document.getElementById("yourNote").textContent = `🎵 당신의 음: ${noteName}`;
-    if (targetNote) {
-      if (noteName === targetNote) {
-        document.getElementById("result").textContent = "✅ 정답!";
-        document.getElementById("result").style.backgroundColor = "#90ee90";
-      } else {
-        document.getElementById("result").textContent = "❌ 오답";
-        document.getElementById("result").style.backgroundColor = "#ff7f7f";
+    const result = [];
+    if (chkDup) {
+      const arr = curPool.slice();
+      for (let i = 0; i < 6; i++) {
+        const idx = Math.floor(Math.random() * (poolSize - i));
+        result.push(arr[idx]);
+        arr[idx] = arr[poolSize - 1 - i];
+      }
+    } else {
+      for (let i = 0; i < 6; i++) {
+        result.push(curPool[Math.floor(Math.random() * poolSize)]);
       }
     }
+
+    outEl.textContent = result.join(' ');
   }
-  requestAnimationFrame(listenPitch);
-}
 
-// 기본 오토코릴레이션 (간단한 피치 탐지)
-function autoCorrelate(buf, sampleRate) {
-  let SIZE = buf.length;
-  let rms = 0;
-  for (let i = 0; i < SIZE; i++) {
-    rms += buf[i] * buf[i];
-  }
-  rms = Math.sqrt(rms / SIZE);
-  if (rms < 0.01) return null; // 소리 약하면 무시
+  document.getElementById("rollBtn").addEventListener("click", pick);
 
-  let r1 = 0, r2 = SIZE - 1, thres = 0.2;
-  for (let i = 0; i < SIZE/2; i++) {
-    if (Math.abs(buf[i]) < thres) { r1 = i; break; }
-  }
-  for (let i = 1; i < SIZE/2; i++) {
-    if (Math.abs(buf[SIZE-i]) < thres) { r2 = SIZE-i; break; }
-  }
-  buf = buf.slice(r1, r2);
-  SIZE = buf.length;
-
-  const c = new Array(SIZE).fill(0);
-  for (let i = 0; i < SIZE; i++)
-    for (let j = 0; j < SIZE - i; j++)
-      c[i] = c[i] + buf[j] * buf[j+i];
-
-  let d = 0; while (c[d] > c[d+1]) d++;
-  let maxval = -1, maxpos = -1;
-  for (let i = d; i < SIZE; i++) {
-    if (c[i] > maxval) { maxval = c[i]; maxpos = i; }
-  }
-  let T0 = maxpos;
-
-  return sampleRate / T0;
-}
-
-initMic();
+  // 시작값
+  outEl.textContent = "E A D G B E";
+  timerEl.textContent = "Interval:";
+});
 </script>
 </body>
 </html>
