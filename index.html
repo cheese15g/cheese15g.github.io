@@ -18,7 +18,6 @@ html, body {
   background-color: #f5f5f5;
 }
 
-/* 기본 컨테이너 */
 #rotate-container {
   width: 100%;
   height: 100%;
@@ -33,7 +32,6 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
-  /* JS 계산 제거, 반응형 글자 크기 */
   font-size: clamp(32px, 10vw, 160px);
   text-align: center;
   width: 100%;
@@ -58,7 +56,8 @@ html, body {
 #rollBtn {
   height: 50px;
   flex-grow: 1;
-  font-size: 5vw;
+  /* clamp(최소, 기준, 최대) → 큰 화면에서 글자가 너무 커지지 않게 */
+  font-size: clamp(16px, 4vw, 32px);
   max-width: 100%;
 }
 
@@ -76,7 +75,6 @@ label {
   margin-left: 4px;
 }
 
-/* 모바일 전용: 폭 768px 이하 */
 @media screen and (max-width: 768px) {
   #rotate-container {
     width: 100vh;
@@ -85,9 +83,9 @@ label {
     transform-origin: center center;
   }
   #out {
-    font-size: clamp(28px, 18vw, 200px); /* 모바일에서 더 크게 */
+    font-size: clamp(28px, 18vw, 200px);
   }
-  #rollBtn { font-size: 5vw; height: 50px; }
+  #rollBtn { font-size: clamp(16px, 5vw, 28px); height: 50px; }
   label { font-size: 4vw; }
 }
 </style>
@@ -124,41 +122,4 @@ document.addEventListener("DOMContentLoaded", function() {
 
   function pick() {
     const now = performance.now();
-    if (lastClickTime !== null) {
-      const diff = (now - lastClickTime) / 1000;
-      timerEl.textContent = "Interval: " + diff.toFixed(2) + "s";
-    }
-    lastClickTime = now;
-
-    const chkDup = document.getElementById("chkDup").checked;   // 체크 시 중복 없음
-    const chkScale = document.getElementById("chkScale").checked;
-    const curPool = chkScale ? poolAlt.slice() : pool.slice();
-    const poolSize = curPool.length;
-
-    const result = [];
-    if (chkDup) {
-      // 부분 Fisher–Yates로 6개 비복원 추출
-      const arr = curPool.slice();
-      for (let i = 0; i < 6; i++) {
-        const idx = Math.floor(Math.random() * (poolSize - i));
-        result.push(arr[idx]);
-        arr[idx] = arr[poolSize - 1 - i];
-      }
-    } else {
-      for (let i = 0; i < 6; i++) {
-        result.push(curPool[Math.floor(Math.random() * poolSize)]);
-      }
-    }
-
-    outEl.textContent = result.join(' ');
-  }
-
-  document.getElementById("rollBtn").addEventListener("click", pick);
-
-  // 시작값 고정 + 타이머 라벨 고정
-  outEl.textContent = "E A D G B E";
-  timerEl.textContent = "Interval:";
-});
-</script>
-</body>
-</html>
+    i
