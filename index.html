@@ -92,7 +92,7 @@ label {
 
   #rollBtn {
     font-size: 5vw; /* 글자 최대화, 세로는 그대로 */
-    height: 50px;    /* 세로 고정 */
+    height: 50px;   /* 세로 고정 */
   }
 
   label {
@@ -171,8 +171,10 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("rollBtn").addEventListener("click", pick);
   window.addEventListener("resize", setFontSize);
 
-  setFontSize(); 
-  outEl.innerText = "E A D G B E"; // 시작값 고정
+  setFontSize();
+
+  // 시작값 고정
+  outEl.innerText = "E A D G B E";
 });
 </script>
 </body>
