@@ -40,6 +40,12 @@ html, body {
   overflow: hidden;
 }
 
+#timer {
+  font-size: 20px;
+  margin-top: 5px;
+  text-align: center;
+}
+
 .controls {
   display: flex;
   align-items: center;
@@ -97,7 +103,10 @@ label {
 </head>
 <body>
 <div id="rotate-container">
-  <div id="out"></div>
+  <div>
+    <div id="out"></div>
+    <div id="timer"></div>
+  </div>
   <div class="controls">
     <button id="rollBtn">Roll</button>
     <div class="checkbox-wrapper">
@@ -118,9 +127,18 @@ document.addEventListener("DOMContentLoaded", function() {
   const pool = ["A","B","C","D","E","F","G"];
   const poolAlt = ["C","C#","D♭","D","D#","E♭","E","F","F#","G♭","G","G#","A♭","A","A#","B♭","B"];
   const outEl = document.getElementById("out");
+  const timerEl = document.getElementById("timer");
+  let lastClickTime = null;
 
   // 결과 출력
   function pick() {
+    const now = performance.now();
+    if (lastClickTime !== null) {
+      const diff = (now - lastClickTime) / 1000;
+      timerEl.innerText = "Interval: " + diff.toFixed(2) + "s";
+    }
+    lastClickTime = now;
+
     const chkDup = document.getElementById("chkDup").checked;
     const chkScale = document.getElementById("chkScale").checked;
     const curPool = chkScale ? [...poolAlt] : [...pool];
@@ -153,8 +171,8 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("rollBtn").addEventListener("click", pick);
   window.addEventListener("resize", setFontSize);
 
-  setFontSize(); // 초기 글자 크기 설정
-  pick();        // 초기 결과
+  setFontSize(); 
+  outEl.innerText = "E A D G B E"; // 시작값 고정
 });
 </script>
 </body>
