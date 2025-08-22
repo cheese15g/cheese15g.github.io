@@ -18,7 +18,6 @@ html, body {
   background-color: #f5f5f5;
 }
 
-/* 기본 컨테이너 */
 #rotate-container {
   width: 100%;
   height: 100%;
@@ -29,29 +28,33 @@ html, body {
 }
 
 #out {
-  flex: 2;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 50px; /* 데스크탑 기본 */
+  font-size: clamp(32px, 8vw, 120px); /* 항상 최소 32px 이상 */
   text-align: center;
   width: 100%;
-  white-space: nowrap; /* 한 줄 유지 */
-  overflow: hidden;
+  white-space: nowrap;
+}
+
+#timer {
+  font-size: 20px;
+  margin-top: 5px;
+  text-align: center;
 }
 
 .controls {
   display: flex;
   align-items: center;
   width: 100%;
-  height: 60px; /* 버튼 세로 기준 고정 */
+  height: 60px;
   min-height: 60px;
 }
 
 #rollBtn {
-  height: 50px;       /* 세로 고정 */
-  flex-grow: 1;       /* 가로 최대 확장 */
-  font-size: 5vw;     /* 글자 크기 화면 폭 기준 */
+  height: 50px;
+  flex-grow: 1;
+  font-size: clamp(16px, 4vw, 28px); /* 버튼 글자 크기 제한 */
   max-width: 100%;
 }
 
@@ -62,16 +65,13 @@ html, body {
   justify-content: center;
 }
 
-.checkbox-wrapper div {
-  margin-bottom: 5px;
-}
+.checkbox-wrapper div { margin-bottom: 5px; }
 
 label {
   font-size: 16px;
   margin-left: 4px;
 }
 
-/* 모바일 전용: 폭 768px 이하 */
 @media screen and (max-width: 768px) {
   #rotate-container {
     width: 100vh;
@@ -79,25 +79,20 @@ label {
     transform: rotate(90deg);
     transform-origin: center center;
   }
-
   #out {
-    font-size: 18vw; /* 세로 기준 최대, 한 줄 유지 */
+    font-size: clamp(28px, 16vw, 180px);
   }
-
-  #rollBtn {
-    font-size: 5vw; /* 글자 최대화, 세로는 그대로 */
-    height: 50px;    /* 세로 고정 */
-  }
-
-  label {
-    font-size: 4vw;
-  }
+  #rollBtn { font-size: clamp(14px, 5vw, 24px); height: 50px; }
+  label { font-size: 4vw; }
 }
 </style>
 </head>
 <body>
 <div id="rotate-container">
-  <div id="out"></div>
+  <div>
+    <div id="out"></div>
+    <div id="timer"></div>
+  </div>
   <div class="controls">
     <button id="rollBtn">Roll</button>
     <div class="checkbox-wrapper">
@@ -117,18 +112,27 @@ label {
 document.addEventListener("DOMContentLoaded", function() {
   const pool = ["A","B","C","D","E","F","G"];
   const poolAlt = ["C","C#","D♭","D","D#","E♭","E","F","F#","G♭","G","G#","A♭","A","A#","B♭","B"];
-  const outEl = document.getElementById("out");
 
-  // 결과 출력
+  const outEl = document.getElementById("out");
+  const timerEl = document.getElementById("timer");
+  let lastClickTime = null;
+
   function pick() {
+    const now = performance.now();
+    if (lastClickTime !== null) {
+      const diff = (now - lastClickTime) / 1000;
+      timerEl.textContent = "Interval: " + diff.toFixed(2) + "s";
+    }
+    lastClickTime = now;
+
     const chkDup = document.getElementById("chkDup").checked;
     const chkScale = document.getElementById("chkScale").checked;
-    const curPool = chkScale ? [...poolAlt] : [...pool];
+    const curPool = chkScale ? poolAlt.slice() : pool.slice();
     const poolSize = curPool.length;
 
-    let result = [];
+    const result = [];
     if (chkDup) {
-      let arr = [...curPool];
+      const arr = curPool.slice();
       for (let i = 0; i < 6; i++) {
         const idx = Math.floor(Math.random() * (poolSize - i));
         result.push(arr[idx]);
@@ -140,21 +144,14 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     }
 
-    outEl.innerText = result.join(' ');
-  }
-
-  // 화면 폭 기준 글자 크기 한 번만 설정
-  function setFontSize() {
-    const parentWidth = outEl.parentElement.offsetWidth;
-    const maxFontSize = parentWidth * 0.18; // 폭 기준 최대
-    outEl.style.fontSize = maxFontSize + 'px';
+    outEl.textContent = result.join(' ');
   }
 
   document.getElementById("rollBtn").addEventListener("click", pick);
-  window.addEventListener("resize", setFontSize);
 
-  setFontSize(); // 초기 글자 크기 설정
-  pick();        // 초기 결과
+  // 시작값
+  outEl.textContent = "E A D G B E";
+  timerEl.textContent = "Interval:";
 });
 </script>
 </body>
