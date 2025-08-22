@@ -1,158 +1,104 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Pick 6</title>
-<style>
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  font-family: 'Malgun Gothic', sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #f5f5f5;
-}
-
-#rotate-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-#out {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: clamp(32px, 8vw, 120px); /* 항상 최소 32px 이상 */
-  text-align: center;
-  width: 100%;
-  white-space: nowrap;
-}
-
-#timer {
-  font-size: 20px;
-  margin-top: 5px;
-  text-align: center;
-}
-
-.controls {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  height: 60px;
-  min-height: 60px;
-}
-
-#rollBtn {
-  height: 50px;
-  flex-grow: 1;
-  font-size: clamp(16px, 4vw, 28px); /* 버튼 글자 크기 제한 */
-  max-width: 100%;
-}
-
-.checkbox-wrapper {
-  display: flex;
-  flex-direction: column;
-  margin-left: 10px;
-  justify-content: center;
-}
-
-.checkbox-wrapper div { margin-bottom: 5px; }
-
-label {
-  font-size: 16px;
-  margin-left: 4px;
-}
-
-@media screen and (max-width: 768px) {
-  #rotate-container {
-    width: 100vh;
-    height: 100vw;
-    transform: rotate(90deg);
-    transform-origin: center center;
-  }
-  #out {
-    font-size: clamp(28px, 16vw, 180px);
-  }
-  #rollBtn { font-size: clamp(14px, 5vw, 24px); height: 50px; }
-  label { font-size: 4vw; }
-}
-</style>
+  <meta charset="UTF-8">
+  <title>Guitar Note Trainer</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: sans-serif;
+      text-align: center;
+      transition: background-color 0.3s;
+    }
+    #target {
+      font-size: 2em;
+      margin: 20px 0;
+    }
+  </style>
 </head>
 <body>
-<div id="rotate-container">
-  <div>
-    <div id="out"></div>
-    <div id="timer"></div>
-  </div>
-  <div class="controls">
-    <button id="rollBtn">Roll</button>
-    <div class="checkbox-wrapper">
-      <div>
-        <input type="checkbox" id="chkDup">
-        <label for="chkDup">No Duplicates</label>
-      </div>
-      <div>
-        <input type="checkbox" id="chkScale">
-        <label for="chkScale">#, ♭</label>
-      </div>
-    </div>
-  </div>
-</div>
+  <h1>기타 지판 암기 훈련</h1>
+  <p id="target">목표 음: </p>
+  <p>(마이크 허용 필요)</p>
 
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-  const pool = ["A","B","C","D","E","F","G"];
-  const poolAlt = ["C","C#","D♭","D","D#","E♭","E","F","F#","G♭","G","G#","A♭","A","A#","B♭","B"];
+  <script>
+    // 간단한 음계 매핑 (기타 음계는 필요시 확장 가능)
+    const notes = [
+      { name: "E2", freq: 82.41 },
+      { name: "A2", freq: 110.00 },
+      { name: "D3", freq: 146.83 },
+      { name: "G3", freq: 196.00 },
+      { name: "B3", freq: 246.94 },
+      { name: "E4", freq: 329.63 }
+    ];
 
-  const outEl = document.getElementById("out");
-  const timerEl = document.getElementById("timer");
-  let lastClickTime = null;
+    // 목표 음 무작위 선택
+    const targetNote = notes[Math.floor(Math.random() * notes.length)];
+    document.getElementById("target").textContent = "목표 음: " + targetNote.name;
 
-  function pick() {
-    const now = performance.now();
-    if (lastClickTime !== null) {
-      const diff = (now - lastClickTime) / 1000;
-      timerEl.textContent = "Interval: " + diff.toFixed(2) + "s";
-    }
-    lastClickTime = now;
+    // 오디오 분석 준비
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const source = audioCtx.createMediaStreamSource(stream);
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 2048;
+      const buffer = new Float32Array(analyser.fftSize);
 
-    const chkDup = document.getElementById("chkDup").checked;
-    const chkScale = document.getElementById("chkScale").checked;
-    const curPool = chkScale ? poolAlt.slice() : pool.slice();
-    const poolSize = curPool.length;
+      source.connect(analyser);
 
-    const result = [];
-    if (chkDup) {
-      const arr = curPool.slice();
-      for (let i = 0; i < 6; i++) {
-        const idx = Math.floor(Math.random() * (poolSize - i));
-        result.push(arr[idx]);
-        arr[idx] = arr[poolSize - 1 - i];
+      function autoCorrelate(buf, sampleRate) {
+        // 오토코릴레이션 기반 피치 탐지 (간단 구현)
+        let SIZE = buf.length;
+        let MAX_SAMPLES = Math.floor(SIZE/2);
+        let bestOffset = -1;
+        let bestCorrelation = 0;
+        let rms = 0;
+        for (let i=0;i<SIZE;i++) {
+          let val = buf[i];
+          rms += val*val;
+        }
+        rms = Math.sqrt(rms/SIZE);
+        if (rms<0.01) return -1; // 입력 너무 작음
+
+        let lastCorrelation=1;
+        for (let offset = 0; offset < MAX_SAMPLES; offset++) {
+          let correlation = 0;
+          for (let i=0; i<MAX_SAMPLES; i++) {
+            correlation += Math.abs((buf[i])-(buf[i+offset]));
+          }
+          correlation = 1 - (correlation/MAX_SAMPLES);
+          if (correlation > 0.9 && correlation > lastCorrelation) {
+            bestCorrelation = correlation;
+            bestOffset = offset;
+          }
+          lastCorrelation = correlation;
+        }
+        if (bestOffset > -1) {
+          return sampleRate/bestOffset;
+        }
+        return -1;
       }
-    } else {
-      for (let i = 0; i < 6; i++) {
-        result.push(curPool[Math.floor(Math.random() * poolSize)]);
+
+      function update() {
+        analyser.getFloatTimeDomainData(buffer);
+        let pitch = autoCorrelate(buffer, audioCtx.sampleRate);
+        if (pitch !== -1) {
+          let diff = Math.abs(pitch - targetNote.freq);
+          if (diff < 5) {
+            document.body.style.backgroundColor = "lightgreen"; // 정답
+          } else {
+            document.body.style.backgroundColor = "lightcoral"; // 오답
+          }
+        } else {
+          document.body.style.backgroundColor = "white"; // 입력 없음
+        }
+        requestAnimationFrame(update);
       }
-    }
-
-    outEl.textContent = result.join(' ');
-  }
-
-  document.getElementById("rollBtn").addEventListener("click", pick);
-
-  // 시작값
-  outEl.textContent = "E A D G B E";
-  timerEl.textContent = "Interval:";
-});
-</script>
+      update();
+    }).catch(err => {
+      alert("마이크 접근 불가: " + err);
+    });
+  </script>
 </body>
 </html>
