@@ -2,103 +2,112 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>Guitar Note Trainer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>기타 지판 훈련</title>
   <style>
-    body {
-      margin: 0;
-      padding: 20px;
-      font-family: sans-serif;
-      text-align: center;
-      transition: background-color 0.3s;
-    }
-    #target {
-      font-size: 2em;
-      margin: 20px 0;
-    }
+    body { font-family: sans-serif; text-align: center; padding: 20px; }
+    #note { font-size: 2em; margin: 20px 0; }
+    #result { font-size: 2em; margin: 20px 0; padding: 10px; border-radius: 10px; display: inline-block; }
+    button { padding: 10px 20px; font-size: 1.2em; }
   </style>
 </head>
 <body>
-  <h1>기타 지판 암기 훈련</h1>
-  <p id="target">목표 음: </p>
-  <p>(마이크 허용 필요)</p>
+  <h2>기타 지판 암기 훈련</h2>
+  <button onclick="generateNote()">문제 생성</button>
+  <div id="note">-</div>
+  <div id="yourNote">🎵 당신의 음: -</div>
+  <div id="result">결과 대기중</div>
 
-  <script>
-    // 간단한 음계 매핑 (기타 음계는 필요시 확장 가능)
-    const notes = [
-      { name: "E2", freq: 82.41 },
-      { name: "A2", freq: 110.00 },
-      { name: "D3", freq: 146.83 },
-      { name: "G3", freq: 196.00 },
-      { name: "B3", freq: 246.94 },
-      { name: "E4", freq: 329.63 }
-    ];
+<script>
+const notes = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+let targetNote = null;
+let audioCtx, analyser, buffer, micStream;
 
-    // 목표 음 무작위 선택
-    const targetNote = notes[Math.floor(Math.random() * notes.length)];
-    document.getElementById("target").textContent = "목표 음: " + targetNote.name;
+function generateNote() {
+  const stringNum = Math.floor(Math.random() * 6) + 1; // 1~6번 줄
+  targetNote = notes[Math.floor(Math.random()*notes.length)];
+  document.getElementById("note").textContent = `🎸 ${stringNum}번 줄 → ${targetNote}`;
+  document.getElementById("result").textContent = "결과 대기중";
+  document.getElementById("result").style.backgroundColor = "transparent";
+}
 
-    // 오디오 분석 준비
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const source = audioCtx.createMediaStreamSource(stream);
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 2048;
-      const buffer = new Float32Array(analyser.fftSize);
+// 주파수를 가장 가까운 음계로 변환
+function freqToNoteName(freq) {
+  if (!freq || freq <= 0) return null;
+  const A4 = 440;
+  const n = Math.round(12 * Math.log2(freq / A4));
+  const noteIndex = (n + 9) % 12; // A=0 → C=0으로 보정
+  return notes[(noteIndex + 12) % 12];
+}
 
-      source.connect(analyser);
+// 마이크 초기화
+async function initMic() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  const source = audioCtx.createMediaStreamSource(micStream);
+  analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 2048;
+  buffer = new Float32Array(analyser.fftSize);
+  source.connect(analyser);
+  listenPitch();
+}
 
-      function autoCorrelate(buf, sampleRate) {
-        // 오토코릴레이션 기반 피치 탐지 (간단 구현)
-        let SIZE = buf.length;
-        let MAX_SAMPLES = Math.floor(SIZE/2);
-        let bestOffset = -1;
-        let bestCorrelation = 0;
-        let rms = 0;
-        for (let i=0;i<SIZE;i++) {
-          let val = buf[i];
-          rms += val*val;
-        }
-        rms = Math.sqrt(rms/SIZE);
-        if (rms<0.01) return -1; // 입력 너무 작음
-
-        let lastCorrelation=1;
-        for (let offset = 0; offset < MAX_SAMPLES; offset++) {
-          let correlation = 0;
-          for (let i=0; i<MAX_SAMPLES; i++) {
-            correlation += Math.abs((buf[i])-(buf[i+offset]));
-          }
-          correlation = 1 - (correlation/MAX_SAMPLES);
-          if (correlation > 0.9 && correlation > lastCorrelation) {
-            bestCorrelation = correlation;
-            bestOffset = offset;
-          }
-          lastCorrelation = correlation;
-        }
-        if (bestOffset > -1) {
-          return sampleRate/bestOffset;
-        }
-        return -1;
+// 피치 추정
+function listenPitch() {
+  analyser.getFloatTimeDomainData(buffer);
+  const freq = autoCorrelate(buffer, audioCtx.sampleRate);
+  const noteName = freqToNoteName(freq);
+  if (noteName) {
+    document.getElementById("yourNote").textContent = `🎵 당신의 음: ${noteName}`;
+    if (targetNote) {
+      if (noteName === targetNote) {
+        document.getElementById("result").textContent = "✅ 정답!";
+        document.getElementById("result").style.backgroundColor = "#90ee90";
+      } else {
+        document.getElementById("result").textContent = "❌ 오답";
+        document.getElementById("result").style.backgroundColor = "#ff7f7f";
       }
+    }
+  }
+  requestAnimationFrame(listenPitch);
+}
 
-      function update() {
-        analyser.getFloatTimeDomainData(buffer);
-        let pitch = autoCorrelate(buffer, audioCtx.sampleRate);
-        if (pitch !== -1) {
-          let diff = Math.abs(pitch - targetNote.freq);
-          if (diff < 5) {
-            document.body.style.backgroundColor = "lightgreen"; // 정답
-          } else {
-            document.body.style.backgroundColor = "lightcoral"; // 오답
-          }
-        } else {
-          document.body.style.backgroundColor = "white"; // 입력 없음
-        }
-        requestAnimationFrame(update);
-      }
-      update();
-    }).catch(err => {
-      alert("마이크 접근 불가: " + err);
-    });
-  </script>
+// 기본 오토코릴레이션 (간단한 피치 탐지)
+function autoCorrelate(buf, sampleRate) {
+  let SIZE = buf.length;
+  let rms = 0;
+  for (let i = 0; i < SIZE; i++) {
+    rms += buf[i] * buf[i];
+  }
+  rms = Math.sqrt(rms / SIZE);
+  if (rms < 0.01) return null; // 소리 약하면 무시
+
+  let r1 = 0, r2 = SIZE - 1, thres = 0.2;
+  for (let i = 0; i < SIZE/2; i++) {
+    if (Math.abs(buf[i]) < thres) { r1 = i; break; }
+  }
+  for (let i = 1; i < SIZE/2; i++) {
+    if (Math.abs(buf[SIZE-i]) < thres) { r2 = SIZE-i; break; }
+  }
+  buf = buf.slice(r1, r2);
+  SIZE = buf.length;
+
+  const c = new Array(SIZE).fill(0);
+  for (let i = 0; i < SIZE; i++)
+    for (let j = 0; j < SIZE - i; j++)
+      c[i] = c[i] + buf[j] * buf[j+i];
+
+  let d = 0; while (c[d] > c[d+1]) d++;
+  let maxval = -1, maxpos = -1;
+  for (let i = d; i < SIZE; i++) {
+    if (c[i] > maxval) { maxval = c[i]; maxpos = i; }
+  }
+  let T0 = maxpos;
+
+  return sampleRate / T0;
+}
+
+initMic();
+</script>
 </body>
 </html>
